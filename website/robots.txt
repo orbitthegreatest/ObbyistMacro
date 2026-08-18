@@ -1,4 +1,0 @@
-User-agent: *
-Allow: /
-
-Sitemap: https://obbyist-macro.vercel.app/sitemap.xml
