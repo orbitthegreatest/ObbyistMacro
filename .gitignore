@@ -1,0 +1,11 @@
+# Build outputs
+src/bin/
+src/obj/
+src/publish/
+installer/output/
+
+# Website (node, if ever used)
+node_modules/
+
+# Logs
+*.log
