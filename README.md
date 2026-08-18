@@ -3,8 +3,10 @@
 > Professional Roblox obbies macro toolkit — FPS changer, Wallhop and Freeze macros.
 
 [![Download latest](https://img.shields.io/badge/Download-Latest%20Release-3BFF88?style=for-the-badge)](https://github.com/orbitthegreatest/ObbyistMacro/releases/latest)
+[![OrbitDen](https://img.shields.io/badge/OrbitDen-Main%20Website-3BFF88?style=for-the-badge)](https://orbitden.vercel.app/)
 
-A lightweight Windows macro toolkit for Roblox obbies. One small tray app, three
+A lightweight Windows macro toolkit for Roblox obbies — part of the
+[OrbitDen](https://orbitden.vercel.app/) app suite. One small tray app, three
 macros, global hotkeys — everything configured from a clean dark UI.
 
 **All macros only trigger while Roblox is the focused window**, so your hotkeys
