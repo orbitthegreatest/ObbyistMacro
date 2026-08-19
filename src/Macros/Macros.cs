@@ -321,3 +321,131 @@ public class FreezeMacro
         }
     }
 }
+
+/// <summary>
+/// Alignment macro: presses Roblox's legacy camera-alignment keys.
+/// Left alignment = ',' (rotate the camera 45° counter-clockwise),
+/// right alignment = '.' (45° clockwise). Roblox matches these by character,
+/// so the physical keys depend on the keyboard layout (English Canada: , / .;
+/// French AZERTY, German, Russian, Dvorak, ...: different keys). The macro
+/// auto-detects the active layout and resolves the exact keys. The trigger
+/// hotkeys (any key, including mouse buttons) are matched by MacroEngine.
+/// </summary>
+public class AlignMacro
+{
+    private readonly AppSettings _settings;
+
+    public AlignMacro(AppSettings settings) => _settings = settings;
+
+    public void Trigger(bool left)
+    {
+        ThreadPool.QueueUserWorkItem(_ =>
+        {
+            // Resolve against the active layout every time. Modifier state
+            // (Shift / AltGr) is honored: a few layouts (e.g. Canadian
+            // Multilingual Standard) type ',' or '.' only with a modifier.
+            if (KeyboardLayout.Resolve(left ? ',' : '.', out int _, out int scan, out bool extended, out byte mods))
+            {
+                bool shift = (mods & 0x01) != 0;
+                bool altGr = (mods & 0x06) == 0x06; // Ctrl+Alt = AltGr
+                bool ctrl = (mods & 0x02) != 0 && !altGr;
+                bool alt = (mods & 0x04) != 0 && !altGr;
+                if (ctrl) InputSender.SendVkDown(KeyCodes.VK_CONTROL);
+                if (alt) InputSender.SendVkDown(KeyCodes.VK_MENU);
+                if (altGr) { InputSender.SendVkDown(KeyCodes.VK_CONTROL); InputSender.SendVkDown(KeyCodes.VK_MENU); }
+                if (shift) InputSender.SendVkDown(KeyCodes.VK_SHIFT);
+                InputSender.TapScancode((byte)scan, 20, extended);
+                if (shift) InputSender.SendVkUp(KeyCodes.VK_SHIFT);
+                if (altGr) { InputSender.SendVkUp(KeyCodes.VK_MENU); InputSender.SendVkUp(KeyCodes.VK_CONTROL); }
+                if (alt) InputSender.SendVkUp(KeyCodes.VK_MENU);
+                if (ctrl) InputSender.SendVkUp(KeyCodes.VK_CONTROL);
+                return;
+            }
+            // Last-resort fallback: US-layout comma/period scan codes.
+            InputSender.TapScancode(left ? (byte)0x33 : (byte)0x34, 20);
+        });
+    }
+}
+
+/// <summary>
+/// Wall walk macro, ported from Spencer Macro Utilities defaults: a looping
+/// flick-right / flick-left that keeps the character glued to walls. Flick
+/// distance is computed from the global Roblox sensitivity (Spencer formula:
+/// round((360 / sens) * 0.13), i.e. 94 px at 0.5 sens) and the flick timing
+/// from the Roblox FPS (one flick per frame, ~73 ms between cycles).
+/// Toggle or Hold modes.
+/// </summary>
+public class WallWalkMacro
+{
+    private const int BetweenCyclesMs = 73; // Spencer's RobloxWallWalkValueDelay = 72720 µs
+
+    private readonly AppSettings _settings;
+    public event Action<string> Notify;
+
+    private volatile bool _running;
+
+    public WallWalkMacro(AppSettings settings) => _settings = settings;
+
+    public bool IsRunning => _running;
+
+    public int ComputePixels()
+    {
+        double sens = _settings.RobloxSensitivity;
+        if (sens <= 0) sens = 0.01;
+        return (int)Math.Round((360.0 / sens) * 0.13);
+    }
+
+    private int FrameDelayMs()
+    {
+        int fps = Math.Clamp(_settings.RobloxFps, 1, 300);
+        return Math.Max(1, (int)((1000.0 / fps + 0.5) * 1.1));
+    }
+
+    public void Toggle()
+    {
+        if (_running) { Stop(); }
+        else { Start(); }
+    }
+
+    public void HoldDown()
+    {
+        if (!_running) Start();
+    }
+
+    public void HoldUp()
+    {
+        if (_running) Stop();
+    }
+
+    public void Start()
+    {
+        if (_running) return;
+        _running = true;
+        ThreadPool.QueueUserWorkItem(_ => Loop());
+    }
+
+    public void Stop()
+    {
+        _running = false;
+    }
+
+    private void Loop()
+    {
+        int px = ComputePixels();
+        int delay = FrameDelayMs();
+        while (_running)
+        {
+            if (!Roblox.IsForeground())
+            {
+                _running = false;
+                Notify?.Invoke("Wall walk stopped (Roblox lost focus).");
+                break;
+            }
+            InputSender.MoveMouse(px, 0);
+            Thread.Sleep(delay);
+            if (!_running) break;
+            InputSender.MoveMouse(-px, 0);
+            Thread.Sleep(BetweenCyclesMs);
+        }
+    }
+}

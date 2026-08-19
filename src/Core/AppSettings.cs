@@ -9,9 +9,12 @@ public class AppSettings
     public double RobloxSensitivity { get; set; }
     public int RobloxFps { get; set; } = 60;
     public bool StartMinimized { get; set; }
+    public string SuspendKey { get; set; }
     public FpsMacroSettings Fps { get; set; } = new();
     public WallhopSettings Wallhop { get; set; } = new();
     public FreezeSettings Freeze { get; set; } = new();
+    public AlignSettings Align { get; set; } = new();
+    public WallWalkSettings WallWalk { get; set; } = new();
 
     public class FpsMacroSettings
     {
@@ -31,6 +34,22 @@ public class AppSettings
     }
 
     public class FreezeSettings
+    {
+        public bool Enabled { get; set; }
+        public string Key { get; set; }
+        public string Mode { get; set; } = "Toggle";
+    }
+
+    public class AlignSettings
+    {
+        public bool Enabled { get; set; }
+        /// <summary>Hotkey that presses the layout-resolved left alignment key (',').</summary>
+        public string LeftHotkey { get; set; }
+        /// <summary>Hotkey that presses the layout-resolved right alignment key ('.').</summary>
+        public string RightHotkey { get; set; }
+    }
+
+    public class WallWalkSettings
     {
         public bool Enabled { get; set; }
         public string Key { get; set; }

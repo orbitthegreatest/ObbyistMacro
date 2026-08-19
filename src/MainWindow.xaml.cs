@@ -90,16 +90,18 @@ public partial class MainWindow : Window
             }
         };
 
-        _pages = new[] { PageHome, PageFps, PageWallhop, PageFreeze };
-        _pageMoves = new[] { PageHomeMove, PageFpsMove, PageWallhopMove, PageFreezeMove };
-        _tabButtons = new[] { TabHome, TabFps, TabWallhop, TabFreeze };
-        _tabIcons = new[] { TabHomeIcon, TabFpsIcon, TabWallhopIcon, TabFreezeIcon };
+        _pages = new[] { PageHome, PageFps, PageWallhop, PageFreeze, PageAlign, PageWallWalk };
+        _pageMoves = new[] { PageHomeMove, PageFpsMove, PageWallhopMove, PageFreezeMove, PageAlignMove, PageWallWalkMove };
+        _tabButtons = new[] { TabHome, TabFps, TabWallhop, TabFreeze, TabAlign, TabWallWalk };
+        _tabIcons = new[] { TabHomeIcon, TabFpsIcon, TabWallhopIcon, TabFreezeIcon, TabAlignIcon, TabWallWalkIcon };
         _tabLabels = new[]
         {
             (TextBlock)((StackPanel)TabHome.Content).Children[1],
             (TextBlock)((StackPanel)TabFps.Content).Children[1],
             (TextBlock)((StackPanel)TabWallhop.Content).Children[1],
             (TextBlock)((StackPanel)TabFreeze.Content).Children[1],
+            (TextBlock)((StackPanel)TabAlign.Content).Children[1],
+            (TextBlock)((StackPanel)TabWallWalk.Content).Children[1],
         };
 
         StatusVersion.Text = App.Version;
@@ -125,10 +127,16 @@ public partial class MainWindow : Window
         _engine.IsOwnWindowFocused = () =>
             Roblox.GetForegroundWindowHandle() == new WindowInteropHelper(this).Handle;
 
+        _engine.SuspendChanged += suspended => Dispatcher.BeginInvoke(() => OnSuspendChanged(suspended));
+
         _robloxTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
         _robloxTimer.Tick += (s, e) => UpdateRobloxStatus();
         _robloxTimer.Start();
         UpdateRobloxStatus();
+
+        // Re-detect the keyboard layout whenever the window regains focus,
+        // so layout switches (Alt+Shift) show up instantly in the Align tab.
+        Activated += (s, e) => RefreshChips();
 
         Loaded += (s, e) =>
         {
@@ -295,6 +303,10 @@ public partial class MainWindow : Window
         WallhopJumpToggle.Unchecked += (s, e) => SetWallhopJump(false);
         FreezeEnablePageToggle.Checked += (s, e) => SetFreezeEnabled(true);
         FreezeEnablePageToggle.Unchecked += (s, e) => SetFreezeEnabled(false);
+        AlignEnablePageToggle.Checked += (s, e) => SetAlignEnabled(true);
+        AlignEnablePageToggle.Unchecked += (s, e) => SetAlignEnabled(false);
+        WallWalkEnablePageToggle.Checked += (s, e) => SetWallWalkEnabled(true);
+        WallWalkEnablePageToggle.Unchecked += (s, e) => SetWallWalkEnabled(false);
     }
 
     private void ParseSensitivity()
@@ -344,6 +356,20 @@ public partial class MainWindow : Window
         RefreshMacroStates();
     }
 
+    private void SetAlignEnabled(bool on)
+    {
+        _settings.Align.Enabled = on;
+        Save();
+        RefreshMacroStates();
+    }
+
+    private void SetWallWalkEnabled(bool on)
+    {
+        _settings.WallWalk.Enabled = on;
+        Save();
+        RefreshMacroStates();
+    }
+
     private void Save() => SettingsService.Save(_settings);
 
     // =====================================================================
@@ -352,6 +378,10 @@ public partial class MainWindow : Window
     private void FpsKeyButton_Click(object sender, RoutedEventArgs e) => StartCapture("fps", FpsKeyButton);
     private void WallhopKeyButton_Click(object sender, RoutedEventArgs e) => StartCapture("wallhop", WallhopKeyButton);
     private void FreezeKeyButton_Click(object sender, RoutedEventArgs e) => StartCapture("freeze", FreezeKeyButton);
+    private void AlignLeftKeyButton_Click(object sender, RoutedEventArgs e) => StartCapture("alignleft", AlignLeftKeyButton);
+    private void AlignRightKeyButton_Click(object sender, RoutedEventArgs e) => StartCapture("alignright", AlignRightKeyButton);
+    private void WallWalkKeyButton_Click(object sender, RoutedEventArgs e) => StartCapture("wallwalk", WallWalkKeyButton);
+    private void SuspendKeyButton_Click(object sender, RoutedEventArgs e) => StartCapture("suspend", SuspendKeyButton);
 
     private void StartCapture(string target, Button btn)
     {
@@ -367,7 +397,11 @@ public partial class MainWindow : Window
         {
             "fps" => FpsKeyButton,
             "wallhop" => WallhopKeyButton,
-            _ => FreezeKeyButton,
+            "freeze" => FreezeKeyButton,
+            "alignleft" => AlignLeftKeyButton,
+            "alignright" => AlignRightKeyButton,
+            "wallwalk" => WallWalkKeyButton,
+            _ => SuspendKeyButton,
         };
         if (vk == 0)
         {
@@ -383,6 +417,10 @@ public partial class MainWindow : Window
             case "fps": _settings.Fps.Key = name; break;
             case "wallhop": _settings.Wallhop.Key = name; break;
             case "freeze": _settings.Freeze.Key = name; break;
+            case "alignleft": _settings.Align.LeftHotkey = name; break;
+            case "alignright": _settings.Align.RightHotkey = name; break;
+            case "wallwalk": _settings.WallWalk.Key = name; break;
+            case "suspend": _settings.SuspendKey = name; break;
         }
         btn.Content = name;
         Save();
@@ -395,8 +433,23 @@ public partial class MainWindow : Window
     {
         "fps" => _settings.Fps.Key,
         "wallhop" => _settings.Wallhop.Key,
-        _ => _settings.Freeze.Key,
+        "freeze" => _settings.Freeze.Key,
+        "alignleft" => _settings.Align.LeftHotkey,
+        "alignright" => _settings.Align.RightHotkey,
+        "wallwalk" => _settings.WallWalk.Key,
+        _ => _settings.SuspendKey,
     };
+
+    // =====================================================================
+    //  Global suspend
+    // =====================================================================
+    private void OnSuspendChanged(bool suspended)
+    {
+        SuspendStatusText.Text = suspended ? "SUSPENDED — all macros off" : "All macros active";
+        SuspendStatusText.Foreground = (Brush)FindResource(suspended ? "TrayYellowBrush" : "AccentBrush");
+        _calibrationTip ??= new CalibrationTipWindow();
+        _calibrationTip.ShowTip(suspended ? "SUSPENDED — all macros off" : "RESUMED — macros active", 1800);
+    }
 
     // =====================================================================
     //  FPS macro actions
@@ -458,6 +511,31 @@ public partial class MainWindow : Window
     }
 
     // =====================================================================
+    //  Wall walk mode
+    // =====================================================================
+    private void WallWalkMode_Click(object sender, RoutedEventArgs e)
+    {
+        string mode = (string)((Button)sender).Tag;
+        _settings.WallWalk.Mode = mode;
+        Save();
+        UpdateWallWalkModeUi();
+        ShowToast("Wall walk mode: " + mode);
+    }
+
+    private void UpdateWallWalkModeUi()
+    {
+        bool toggle = _settings.WallWalk.Mode != "Hold";
+        var accent = (SolidColorBrush)FindResource("AccentBrush");
+        var soft = (SolidColorBrush)FindResource("AccentSoftBrush");
+        WallWalkToggleWrap.Background = toggle ? soft : (Brush)new SolidColorBrush(Color.FromRgb(0x24, 0x1D, 0x3C));
+        WallWalkToggleWrap.BorderBrush = toggle ? accent : (Brush)new SolidColorBrush(Color.FromRgb(0x3A, 0x2F, 0x5E));
+        WallWalkHoldWrap.Background = !toggle ? soft : (Brush)new SolidColorBrush(Color.FromRgb(0x24, 0x1D, 0x3C));
+        WallWalkHoldWrap.BorderBrush = !toggle ? accent : (Brush)new SolidColorBrush(Color.FromRgb(0x3A, 0x2F, 0x5E));
+        WallWalkToggleModeBtn.Foreground = toggle ? accent : (Brush)FindResource("TextDimBrush");
+        WallWalkHoldModeBtn.Foreground = !toggle ? accent : (Brush)FindResource("TextDimBrush");
+    }
+
+    // =====================================================================
     //  UI refresh
     // =====================================================================
     private void RefreshAllUi()
@@ -469,16 +547,23 @@ public partial class MainWindow : Window
         FpsKeyButton.Content = string.IsNullOrEmpty(_settings.Fps.Key) ? "(none)" : _settings.Fps.Key;
         WallhopKeyButton.Content = string.IsNullOrEmpty(_settings.Wallhop.Key) ? "(none)" : _settings.Wallhop.Key;
         FreezeKeyButton.Content = string.IsNullOrEmpty(_settings.Freeze.Key) ? "(none)" : _settings.Freeze.Key;
+        AlignLeftKeyButton.Content = string.IsNullOrEmpty(_settings.Align.LeftHotkey) ? "(none)" : _settings.Align.LeftHotkey;
+        AlignRightKeyButton.Content = string.IsNullOrEmpty(_settings.Align.RightHotkey) ? "(none)" : _settings.Align.RightHotkey;
+        WallWalkKeyButton.Content = string.IsNullOrEmpty(_settings.WallWalk.Key) ? "(none)" : _settings.WallWalk.Key;
+        SuspendKeyButton.Content = string.IsNullOrEmpty(_settings.SuspendKey) ? "(none)" : _settings.SuspendKey;
 
         FpsEnablePageToggle.IsChecked = _settings.Fps.Enabled;
         WallhopEnablePageToggle.IsChecked = _settings.Wallhop.Enabled;
         WallhopJumpToggle.IsChecked = _settings.Wallhop.Jump;
         FreezeEnablePageToggle.IsChecked = _settings.Freeze.Enabled;
+        AlignEnablePageToggle.IsChecked = _settings.Align.Enabled;
+        WallWalkEnablePageToggle.IsChecked = _settings.WallWalk.Enabled;
 
         RefreshFpsCounts();
         RefreshChips();
         RefreshMacroStates();
         UpdateFreezeModeUi();
+        UpdateWallWalkModeUi();
         RefreshCalibrationHint();
     }
 
@@ -492,12 +577,20 @@ public partial class MainWindow : Window
         FpsCapChip.Text = _settings.Fps.CurrentCap;
         WallhopSensChip.Text = _settings.RobloxSensitivity > 0 ? _settings.RobloxSensitivity.ToString("0.###") : "–";
         WallhopFpsChip.Text = _settings.RobloxFps.ToString();
+        AlignLayoutChip.Text = KeyboardLayout.DisplayName();
+        AlignAutoKeysChip.Text = (KeyboardLayout.Resolve(',', out int _, out int _, out bool _, out byte _) ? "," : "?")
+            + "  /  " + (KeyboardLayout.Resolve('.', out int _, out int _, out bool _, out byte _) ? "." : "?");
+        WallWalkSensChip.Text = _settings.RobloxSensitivity > 0 ? _settings.RobloxSensitivity.ToString("0.###") : "–";
+        WallWalkFpsChip.Text = _settings.RobloxFps.ToString();
+        WallWalkPixelsChip.Text = _engine.WallWalk.ComputePixels() + " px";
     }
 
     private void RefreshMacroStates()
     {
-        int armed = (_settings.Fps.Enabled ? 1 : 0) + (_settings.Wallhop.Enabled ? 1 : 0) + (_settings.Freeze.Enabled ? 1 : 0);
-        ArmedChip.Text = armed + "/3";
+        int armed = (_settings.Fps.Enabled ? 1 : 0) + (_settings.Wallhop.Enabled ? 1 : 0)
+            + (_settings.Freeze.Enabled ? 1 : 0) + (_settings.Align.Enabled ? 1 : 0)
+            + (_settings.WallWalk.Enabled ? 1 : 0);
+        ArmedChip.Text = armed + "/5";
     }
 
     private void RefreshCalibrationHint()

@@ -12,6 +12,8 @@ public class MacroEngine : IDisposable
     private readonly FpsMacro _fps;
     private readonly WallhopMacro _wallhop;
     private readonly FreezeMacro _freeze;
+    private readonly AlignMacro _align;
+    private readonly WallWalkMacro _wallWalk;
 
     private readonly Dictionary<int, bool> _keyHeld = new();
     private bool _busy;
@@ -31,6 +33,12 @@ public class MacroEngine : IDisposable
     public FpsMacro Fps => _fps;
     public WallhopMacro Wallhop => _wallhop;
     public FreezeMacro Freeze => _freeze;
+    public AlignMacro Align => _align;
+    public WallWalkMacro WallWalk => _wallWalk;
+
+    /// <summary>Global kill-switch: when true, every macro trigger is ignored.</summary>
+    public bool Suspended { get; private set; }
+    public event Action<bool> SuspendChanged;
 
     public MacroEngine(AppSettings settings)
     {
@@ -38,9 +46,22 @@ public class MacroEngine : IDisposable
         _fps = new FpsMacro(settings);
         _wallhop = new WallhopMacro(settings);
         _freeze = new FreezeMacro(settings);
+        _align = new AlignMacro(settings);
+        _wallWalk = new WallWalkMacro(settings);
         _fps.Notify += FireNotify;
         _freeze.Notify += FireNotify;
+        _wallWalk.Notify += FireNotify;
     }
+
+    public void SetSuspended(bool on)
+    {
+        if (Suspended == on) return;
+        Suspended = on;
+        if (on) _wallWalk.Stop();
+        SuspendChanged?.Invoke(on);
+    }
+
+    private void ToggleSuspend() => SetSuspended(!Suspended);
 
     public void Start()
     {
@@ -57,6 +78,7 @@ public class MacroEngine : IDisposable
         InputHooks.KeyUp -= OnKeyUp;
         InputHooks.MouseDown -= OnMouseDown;
         InputHooks.MouseUp -= OnMouseUp;
+        _wallWalk.Stop();
         InputHooks.Stop();
     }
 
@@ -92,7 +114,17 @@ public class MacroEngine : IDisposable
             }
             return;
         }
+
+        // Global kill-switch: works even when Roblox is not focused.
+        if (MatchKey(_settings.SuspendKey, vk) && !IsHeld(vk))
+        {
+            MarkHeld(vk);
+            ToggleSuspend();
+            return;
+        }
+
         if (_busy || !Roblox.IsForeground()) return;
+        if (Suspended) return;
 
         if (_settings.Fps.Enabled && MatchKey(_settings.Fps.Key, vk) && !IsHeld(vk))
         {
@@ -117,12 +149,39 @@ public class MacroEngine : IDisposable
                 RunMacro(_freeze.Toggle);
             }
         }
+        else if (_settings.Align.Enabled && MatchKey(_settings.Align.LeftHotkey, vk) && !IsHeld(vk))
+        {
+            MarkHeld(vk);
+            RunMacro(() => _align.Trigger(true));
+        }
+        else if (_settings.Align.Enabled && MatchKey(_settings.Align.RightHotkey, vk) && !IsHeld(vk))
+        {
+            MarkHeld(vk);
+            RunMacro(() => _align.Trigger(false));
+        }
+        else if (_settings.WallWalk.Enabled && MatchKey(_settings.WallWalk.Key, vk) && !IsHeld(vk))
+        {
+            MarkHeld(vk);
+            if (_settings.WallWalk.Mode == "Hold")
+            {
+                _wallWalk.HoldDown();
+            }
+            else
+            {
+                _wallWalk.Toggle();
+            }
+        }
     }
 
     private void OnKeyUp(int vk)
     {
         _keyHeld[vk] = false;
         if (_busy || !Roblox.IsForeground()) return;
+        if (_settings.WallWalk.Enabled && _settings.WallWalk.Mode == "Hold" &&
+            MatchKey(_settings.WallWalk.Key, vk))
+        {
+            _wallWalk.HoldUp();
+        }
         if (_settings.Freeze.Enabled && _settings.Freeze.Mode == "Hold" &&
             MatchKey(_settings.Freeze.Key, vk))
         {
@@ -139,7 +198,17 @@ public class MacroEngine : IDisposable
             CaptureKeyPressed?.Invoke(vk);
             return;
         }
+
+        // Global kill-switch: works even when Roblox is not focused.
+        if (MatchKey(_settings.SuspendKey, vk) && !IsHeld(vk))
+        {
+            MarkHeld(vk);
+            ToggleSuspend();
+            return;
+        }
+
         if (_busy || !Roblox.IsForeground()) return;
+        if (Suspended) return;
 
         if (_settings.Fps.Enabled && MatchKey(_settings.Fps.Key, vk) && !IsHeld(vk))
         {
@@ -163,6 +232,28 @@ public class MacroEngine : IDisposable
                 RunMacro(_freeze.Toggle);
             }
         }
+        else if (_settings.Align.Enabled && MatchKey(_settings.Align.LeftHotkey, vk) && !IsHeld(vk))
+        {
+            MarkHeld(vk);
+            RunMacro(() => _align.Trigger(true));
+        }
+        else if (_settings.Align.Enabled && MatchKey(_settings.Align.RightHotkey, vk) && !IsHeld(vk))
+        {
+            MarkHeld(vk);
+            RunMacro(() => _align.Trigger(false));
+        }
+        else if (_settings.WallWalk.Enabled && MatchKey(_settings.WallWalk.Key, vk) && !IsHeld(vk))
+        {
+            MarkHeld(vk);
+            if (_settings.WallWalk.Mode == "Hold")
+            {
+                _wallWalk.HoldDown();
+            }
+            else
+            {
+                _wallWalk.Toggle();
+            }
+        }
     }
 
     private void OnMouseUp(InputHooks.MouseButton button)
@@ -170,6 +261,11 @@ public class MacroEngine : IDisposable
         int vk = InputHooks.MouseButtonToVk(button);
         _keyHeld[vk] = false;
         if (_busy || !Roblox.IsForeground()) return;
+        if (_settings.WallWalk.Enabled && _settings.WallWalk.Mode == "Hold" &&
+            MatchKey(_settings.WallWalk.Key, vk))
+        {
+            _wallWalk.HoldUp();
+        }
         if (_settings.Freeze.Enabled && _settings.Freeze.Mode == "Hold" &&
             MatchKey(_settings.Freeze.Key, vk))
         {

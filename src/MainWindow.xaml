@@ -231,7 +231,7 @@
                                                           Color="#FF3BFF88" />
                                     </Border.Effect>
                                 </Border>
-                                <UniformGrid Columns="4" Width="600">
+                                <UniformGrid Columns="6" Width="900">
                                     <Button x:Name="TabHome" Style="{StaticResource TabButton}" Click="Tab_Click"
                                             Tag="0">
                                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
@@ -274,6 +274,28 @@
                                                   StrokeEndLineCap="Round" StrokeLineJoin="Round"
                                                   Width="16" Height="16" Stretch="Uniform" />
                                             <TextBlock Text="Freeze" FontSize="13" Margin="8,0,0,0" />
+                                        </StackPanel>
+                                    </Button>
+                                    <Button x:Name="TabAlign" Style="{StaticResource TabButton}" Click="Tab_Click"
+                                            Tag="4">
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <Path x:Name="TabAlignIcon" Data="M8 5 L3 12 L8 19 M16 5 L21 12 L16 19"
+                                                  Stroke="{StaticResource TextDimBrush}"
+                                                  StrokeThickness="1.8" StrokeStartLineCap="Round"
+                                                  StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                                                  Width="16" Height="16" Stretch="Uniform" />
+                                            <TextBlock Text="Align" FontSize="13" Margin="8,0,0,0" />
+                                        </StackPanel>
+                                    </Button>
+                                    <Button x:Name="TabWallWalk" Style="{StaticResource TabButton}" Click="Tab_Click"
+                                            Tag="5">
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <Path x:Name="TabWallWalkIcon" Data="M4 4 H20 V20 H4 Z M10 4 V20 M16 10 V20 M10 12 H16"
+                                                  Stroke="{StaticResource TextDimBrush}"
+                                                  StrokeThickness="1.8" StrokeStartLineCap="Round"
+                                                  StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                                                  Width="16" Height="16" Stretch="Uniform" />
+                                            <TextBlock Text="Wall Walk" FontSize="13" Margin="8,0,0,0" />
                                         </StackPanel>
                                     </Button>
                                 </UniformGrid>
@@ -351,7 +373,7 @@
                                                     <StackPanel Orientation="Horizontal">
                                                         <TextBlock Text="Macros armed" FontSize="11.5"
                                                                    Foreground="{StaticResource TextFaintBrush}" />
-                                                        <TextBlock x:Name="ArmedChip" Text="0/3"
+                                                        <TextBlock x:Name="ArmedChip" Text="0/5"
                                                                    FontFamily="{StaticResource MonoFont}" FontSize="11.5"
                                                                    Foreground="{StaticResource AccentBrush}" Margin="6,0,0,0" />
                                                     </StackPanel>
@@ -404,8 +426,41 @@
                                                 <StackPanel Grid.Column="1" Margin="16,0,0,0">
                                                     <TextBlock Text="Fast Settings" Style="{StaticResource BodyText}"
                                                                Foreground="{StaticResource TextBrush}" FontSize="12.5" />
-                                                    <TextBlock Text="Open the FPS, Wallhop or Freeze tab to set its hotkey, enable it and read its guide."
+                                                    <TextBlock Text="Open the FPS, Wallhop, Freeze, Align or Wall Walk tab to set its hotkey, enable it and read its guide."
                                                                Style="{StaticResource HintText}" Margin="0,6,0,0" />
+                                                </StackPanel>
+                                            </Grid>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- Global suspend -->
+                                    <Border Style="{StaticResource Card}" Margin="0,14,0,0">
+                                        <StackPanel>
+                                            <TextBlock Text="GLOBAL SUSPEND" Style="{StaticResource SectionTitleText}"
+                                                       Foreground="{StaticResource AccentBrush}" />
+                                            <TextBlock Style="{StaticResource BodyText}" Margin="0,8,0,0">
+                                                One key to stop everything. Press it while macros are running and every macro freezes instantly — Wall Walk stops, Freeze unfreezes and all hotkeys are ignored until you press it again. Works even when Roblox is not focused.
+                                            </TextBlock>
+                                            <Grid Margin="0,12,0,0">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel>
+                                                    <TextBlock Text="Suspend key" Style="{StaticResource BodyText}"
+                                                               Foreground="{StaticResource TextBrush}" FontSize="12.5" />
+                                                    <TextBlock Text="Keyboard key or mouse button. Click the box, then press it."
+                                                               Style="{StaticResource HintText}" Margin="0,5,0,0" />
+                                                    <Button x:Name="SuspendKeyButton" Style="{StaticResource KeyBindButton}"
+                                                            Content="(none)" HorizontalAlignment="Left" Margin="0,10,0,0"
+                                                            Click="SuspendKeyButton_Click" />
+                                                </StackPanel>
+                                                <StackPanel Grid.Column="1" Margin="24,0,0,0">
+                                                    <TextBlock Text="State" Style="{StaticResource BodyText}"
+                                                               Foreground="{StaticResource TextBrush}" FontSize="12.5" />
+                                                    <TextBlock x:Name="SuspendStatusText" Text="All macros active"
+                                                               Style="{StaticResource BodyText}" Margin="0,5,0,0"
+                                                               Foreground="{StaticResource AccentBrush}" />
                                                 </StackPanel>
                                             </Grid>
                                         </StackPanel>
@@ -710,6 +765,232 @@
                                                     </StackPanel>
                                                 </StackPanel>
                                             </Grid>
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+                            </ScrollViewer>
+                        </Grid>
+
+                        <!-- ===================== ALIGN PAGE ===================== -->
+                        <Grid x:Name="PageAlign" Visibility="Collapsed" Opacity="0">
+                            <Grid.RenderTransform>
+                                <TranslateTransform x:Name="PageAlignMove" Y="12" />
+                            </Grid.RenderTransform>
+                            <ScrollViewer Style="{StaticResource SlimScrollViewer}">
+                                <StackPanel Margin="0,0,8,10">
+                                    <TextBlock Text="Align" Style="{StaticResource PageTitleText}" />
+                                    <TextBlock Text="Press Roblox's alignment keys — the camera snaps 45° left or right. Keys are auto-detected from your keyboard layout."
+                                               Style="{StaticResource BodyText}" Margin="0,6,0,14" />
+
+                                    <Border Style="{StaticResource Card}" Margin="0,0,0,14">
+                                        <StackPanel>
+                                            <TextBlock Text="WHAT IT DOES" Style="{StaticResource SectionTitleText}"
+                                                       Foreground="{StaticResource AccentBrush}" />
+                                            <TextBlock Style="{StaticResource BodyText}" Margin="0,8,0,0">
+                                                Roblox's legacy camera-alignment keys are <Run FontFamily="Consolas" Foreground="{StaticResource AccentBrush}">,</Run> (rotate the camera 45° counter-clockwise) and <Run FontFamily="Consolas" Foreground="{StaticResource AccentBrush}">.</Run> (45° clockwise). Games that implement alignment detect them by character, not by physical key — so on non-US keyboard layouts (French AZERTY, German QWERTZ, Russian, Dvorak, English Canada, ...) the correct keys are different.
+                                            </TextBlock>
+                                            <TextBlock Style="{StaticResource BodyText}" Margin="0,10,0,0">
+                                                ObbyistMacro analyses your active keyboard layout automatically and presses the exact keys that type <Run FontFamily="Consolas" Foreground="{StaticResource AccentBrush}">,</Run> and <Run FontFamily="Consolas" Foreground="{StaticResource AccentBrush}">.</Run> for you. Bind any hotkey to trigger them — even mouse buttons.
+                                            </TextBlock>
+                                            <Border Background="{StaticResource AccentSoftBrush}" CornerRadius="10"
+                                                    BorderBrush="{StaticResource AccentDimBrush}" BorderThickness="1"
+                                                    Margin="0,12,0,0" Padding="12,9">
+                                                <TextBlock Style="{StaticResource BodyText}">
+                                                    The layout is re-analysed every time the macro fires, so switching layouts mid-session just works.
+                                                </TextBlock>
+                                            </Border>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <Border Style="{StaticResource Card}" Margin="0,0,0,14">
+                                        <StackPanel>
+                                            <TextBlock Text="CONTROLS" Style="{StaticResource SectionTitleText}"
+                                                       Foreground="{StaticResource AccentBrush}" />
+                                            <Grid Margin="0,12,0,0">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel>
+                                                    <TextBlock Text="Enable macro" Style="{StaticResource BodyText}"
+                                                               Foreground="{StaticResource TextBrush}" FontSize="12.5" />
+                                                    <TextBlock Text="Hotkeys only fire while Roblox is focused."
+                                                               Style="{StaticResource HintText}" Margin="0,5,0,0" />
+                                                    <controls:ToggleSwitch x:Name="AlignEnablePageToggle"
+                                                                           Margin="0,10,0,0"
+                                                                           AutomationProperties.Name="Align macro page" />
+                                                </StackPanel>
+                                                <StackPanel Grid.Column="1" Margin="24,0,0,0">
+                                                    <TextBlock Text="Align left hotkey" Style="{StaticResource BodyText}"
+                                                               Foreground="{StaticResource TextBrush}" FontSize="12.5" />
+                                                    <TextBlock Text="Presses the ',' alignment key for your layout. Keyboard key or mouse button."
+                                                               Style="{StaticResource HintText}" Margin="0,5,0,0" />
+                                                    <Button x:Name="AlignLeftKeyButton" Style="{StaticResource KeyBindButton}"
+                                                            Content="(none)" HorizontalAlignment="Left" Margin="0,10,0,0"
+                                                            Click="AlignLeftKeyButton_Click" />
+                                                </StackPanel>
+                                                <StackPanel Grid.Column="2" Margin="24,0,0,0">
+                                                    <TextBlock Text="Align right hotkey" Style="{StaticResource BodyText}"
+                                                               Foreground="{StaticResource TextBrush}" FontSize="12.5" />
+                                                    <TextBlock Text="Presses the '.' alignment key for your layout. Keyboard key or mouse button."
+                                                               Style="{StaticResource HintText}" Margin="0,5,0,0" />
+                                                    <Button x:Name="AlignRightKeyButton" Style="{StaticResource KeyBindButton}"
+                                                            Content="(none)" HorizontalAlignment="Left" Margin="0,10,0,0"
+                                                            Click="AlignRightKeyButton_Click" />
+                                                </StackPanel>
+                                            </Grid>
+
+                                            <Border Height="1" Background="#FF241D3C" Margin="0,16,0,0" />
+
+                                            <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
+                                                <TextBlock Text="Detected:" FontFamily="{StaticResource BodyFont}"
+                                                           FontSize="12.5" Foreground="{StaticResource TextDimBrush}"
+                                                           VerticalAlignment="Center" />
+                                                <Border Style="{StaticResource Chip}" Margin="10,0,0,0">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock Text="Layout" FontSize="11"
+                                                                   Foreground="{StaticResource TextFaintBrush}" />
+                                                        <TextBlock x:Name="AlignLayoutChip" Text="…"
+                                                                   FontFamily="{StaticResource MonoFont}" FontSize="11.5"
+                                                                   Foreground="{StaticResource AccentBrush}" Margin="6,0,0,0" />
+                                                    </StackPanel>
+                                                </Border>
+                                                <Border Style="{StaticResource Chip}" Margin="8,0,0,0">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock Text="Auto keys" FontSize="11"
+                                                                   Foreground="{StaticResource TextFaintBrush}" />
+                                                        <TextBlock x:Name="AlignAutoKeysChip" Text="…"
+                                                                   FontFamily="{StaticResource MonoFont}" FontSize="11.5"
+                                                                   Foreground="{StaticResource AccentBrush}" Margin="6,0,0,0" />
+                                                    </StackPanel>
+                                                </Border>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+                            </ScrollViewer>
+                        </Grid>
+
+                        <!-- ===================== WALL WALK PAGE ===================== -->
+                        <Grid x:Name="PageWallWalk" Visibility="Collapsed" Opacity="0">
+                            <Grid.RenderTransform>
+                                <TranslateTransform x:Name="PageWallWalkMove" Y="12" />
+                            </Grid.RenderTransform>
+                            <ScrollViewer Style="{StaticResource SlimScrollViewer}">
+                                <StackPanel Margin="0,0,8,10">
+                                    <TextBlock Text="Wall Walk" Style="{StaticResource PageTitleText}" />
+                                    <TextBlock Text="Loop a flick-right / flick-left to keep your character glued to walls — ported from Spencer Macro Utilities."
+                                               Style="{StaticResource BodyText}" Margin="0,6,0,14" />
+
+                                    <Border Style="{StaticResource Card}" Margin="0,0,0,14">
+                                        <StackPanel>
+                                            <TextBlock Text="WHAT IT DOES" Style="{StaticResource SectionTitleText}"
+                                                       Foreground="{StaticResource AccentBrush}" />
+                                            <TextBlock Style="{StaticResource BodyText}" Margin="0,8,0,0">
+                                                Every cycle flicks the camera right, waits exactly one frame, flicks it back and rests ~73 ms. The flick distance comes from your Roblox sensitivity — Spencer's formula, 94 px at 0.5 sens — and the flick timing from your FPS cap, so the wall walk behaves the same at any sens and FPS.
+                                            </TextBlock>
+                                            <Border Background="{StaticResource AccentSoftBrush}" CornerRadius="10"
+                                                    BorderBrush="{StaticResource AccentDimBrush}" BorderThickness="1"
+                                                    Margin="0,12,0,0" Padding="12,9">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <Border Background="{StaticResource AccentBrush}" CornerRadius="999"
+                                                            Padding="9,3">
+                                                        <TextBlock Text="TIP" FontFamily="{StaticResource TitleFont}"
+                                                                   FontSize="10" Foreground="#FF07221A" />
+                                                    </Border>
+                                                    <TextBlock Style="{StaticResource BodyText}" Margin="10,0,0,0"
+                                                               VerticalAlignment="Center">
+                                                        The loop stops by itself when Roblox loses focus, and the Global Suspend key on the Home tab stops it instantly.
+                                                    </TextBlock>
+                                                </StackPanel>
+                                            </Border>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <Border Style="{StaticResource Card}" Margin="0,0,0,14">
+                                        <StackPanel>
+                                            <TextBlock Text="CONTROLS" Style="{StaticResource SectionTitleText}"
+                                                       Foreground="{StaticResource AccentBrush}" />
+                                            <Grid Margin="0,12,0,0">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel>
+                                                    <TextBlock Text="Enable macro" Style="{StaticResource BodyText}"
+                                                               Foreground="{StaticResource TextBrush}" FontSize="12.5" />
+                                                    <TextBlock Text="Hotkey only fires while Roblox is focused."
+                                                               Style="{StaticResource HintText}" Margin="0,5,0,0" />
+                                                    <controls:ToggleSwitch x:Name="WallWalkEnablePageToggle"
+                                                                           Margin="0,10,0,0"
+                                                                           AutomationProperties.Name="Wall walk macro page" />
+                                                </StackPanel>
+                                                <StackPanel Grid.Column="1" Margin="24,0,0,0">
+                                                    <TextBlock Text="Hotkey" Style="{StaticResource BodyText}"
+                                                               Foreground="{StaticResource TextBrush}" FontSize="12.5" />
+                                                    <TextBlock Text="Keyboard key or mouse button. Click the box, then press it."
+                                                               Style="{StaticResource HintText}" Margin="0,5,0,0" />
+                                                    <Button x:Name="WallWalkKeyButton" Style="{StaticResource KeyBindButton}"
+                                                            Content="(none)" HorizontalAlignment="Left" Margin="0,10,0,0"
+                                                            Click="WallWalkKeyButton_Click" />
+                                                    <TextBlock Text="Mode" Style="{StaticResource BodyText}"
+                                                               Foreground="{StaticResource TextBrush}" FontSize="12.5"
+                                                               Margin="0,16,0,0" />
+                                                    <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                                        <Border x:Name="WallWalkToggleWrap" CornerRadius="9" Padding="0"
+                                                                Background="#FF241D3C" BorderBrush="#FF3A2F5E"
+                                                                BorderThickness="1">
+                                                            <Button x:Name="WallWalkToggleModeBtn" Content="Toggle"
+                                                                    Style="{StaticResource GhostButton}" Padding="18,8"
+                                                                    BorderThickness="0" Click="WallWalkMode_Click" Tag="Toggle" />
+                                                        </Border>
+                                                        <Border x:Name="WallWalkHoldWrap" CornerRadius="9" Padding="0" Margin="8,0,0,0"
+                                                                Background="#FF241D3C" BorderBrush="#FF3A2F5E"
+                                                                BorderThickness="1">
+                                                            <Button x:Name="WallWalkHoldModeBtn" Content="Hold"
+                                                                    Style="{StaticResource GhostButton}" Padding="18,8"
+                                                                    BorderThickness="0" Click="WallWalkMode_Click" Tag="Hold" />
+                                                        </Border>
+                                                    </StackPanel>
+                                                </StackPanel>
+                                            </Grid>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <Border Style="{StaticResource Card}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="Uses from Home tab:"
+                                                       FontFamily="{StaticResource BodyFont}" FontSize="12.5"
+                                                       Foreground="{StaticResource TextDimBrush}"
+                                                       VerticalAlignment="Center" />
+                                            <Border Style="{StaticResource Chip}" Margin="10,0,0,0">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="Sensitivity" FontSize="11"
+                                                               Foreground="{StaticResource TextFaintBrush}" />
+                                                    <TextBlock x:Name="WallWalkSensChip" Text="0.123"
+                                                               FontFamily="{StaticResource MonoFont}" FontSize="11.5"
+                                                               Foreground="{StaticResource AccentBrush}" Margin="6,0,0,0" />
+                                                </StackPanel>
+                                            </Border>
+                                            <Border Style="{StaticResource Chip}" Margin="8,0,0,0">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="Roblox FPS" FontSize="11"
+                                                               Foreground="{StaticResource TextFaintBrush}" />
+                                                    <TextBlock x:Name="WallWalkFpsChip" Text="60"
+                                                               FontFamily="{StaticResource MonoFont}" FontSize="11.5"
+                                                               Foreground="{StaticResource AccentBrush}" Margin="6,0,0,0" />
+                                                </StackPanel>
+                                            </Border>
+                                            <Border Style="{StaticResource Chip}" Margin="8,0,0,0">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="Flick" FontSize="11"
+                                                               Foreground="{StaticResource TextFaintBrush}" />
+                                                    <TextBlock x:Name="WallWalkPixelsChip" Text="94 px"
+                                                               FontFamily="{StaticResource MonoFont}" FontSize="11.5"
+                                                               Foreground="{StaticResource AccentBrush}" Margin="6,0,0,0" />
+                                                </StackPanel>
+                                            </Border>
                                         </StackPanel>
                                     </Border>
                                 </StackPanel>

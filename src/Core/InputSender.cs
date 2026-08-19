@@ -26,6 +26,14 @@ public static class InputSender
     private const uint KEYEVENTF_KEYUP = 0x0002;
     private const uint KEYEVENTF_SCANCODE = 0x0008;
     private const uint MOUSEEVENTF_MOVE = 0x0001;
+    private const uint MOUSEEVENTF_LEFTDOWN = 0x0002;
+    private const uint MOUSEEVENTF_LEFTUP = 0x0004;
+    private const uint MOUSEEVENTF_RIGHTDOWN = 0x0008;
+    private const uint MOUSEEVENTF_RIGHTUP = 0x0010;
+    private const uint MOUSEEVENTF_MIDDLEDOWN = 0x0020;
+    private const uint MOUSEEVENTF_MIDDLEUP = 0x0040;
+    private const uint MOUSEEVENTF_XDOWN = 0x0080;
+    private const uint MOUSEEVENTF_XUP = 0x0100;
     private const uint MOUSEEVENTF_ABSOLUTE = 0x8000;
     private const uint MOUSEEVENTF_VIRTUALDESK = 0x4000;
 
@@ -218,6 +226,60 @@ public static class InputSender
         Thread.Sleep(holdMs);
         SendScancode(scancode, up: true, extended: extended);
     }
+
+    /// <summary>
+    /// Presses any key by virtual-key code: keyboard keys are sent by scan code
+    /// (resolved against the active layout), mouse buttons via mouse_event.
+    /// This is how the Align macro sends custom overrides — every key works,
+    /// including mouse buttons.
+    /// </summary>
+    public static void SendVkDown(int vk)
+    {
+        if (KeyCodes.IsMouseButton(vk))
+        {
+            uint flag = MouseFlagForVk(vk, down: true);
+            if (flag != 0) mouse_event(flag, 0, 0, MouseDataForVk(vk), UIntPtr.Zero);
+            return;
+        }
+        int scan = KeyboardLayout.ScanCodeFor(vk);
+        if (scan > 0) SendScancode((byte)scan, extended: KeyboardLayout.IsExtendedVk(vk));
+    }
+
+    public static void SendVkUp(int vk)
+    {
+        if (KeyCodes.IsMouseButton(vk))
+        {
+            uint flag = MouseFlagForVk(vk, down: false);
+            if (flag != 0) mouse_event(flag, 0, 0, MouseDataForVk(vk), UIntPtr.Zero);
+            return;
+        }
+        int scan = KeyboardLayout.ScanCodeFor(vk);
+        if (scan > 0) SendScancode((byte)scan, up: true, extended: KeyboardLayout.IsExtendedVk(vk));
+    }
+
+    public static void TapVk(int vk, int holdMs = 20)
+    {
+        SendVkDown(vk);
+        Thread.Sleep(holdMs);
+        SendVkUp(vk);
+    }
+
+    private static uint MouseFlagForVk(int vk, bool down) => vk switch
+    {
+        KeyCodes.VK_LBUTTON => down ? MOUSEEVENTF_LEFTDOWN : MOUSEEVENTF_LEFTUP,
+        KeyCodes.VK_RBUTTON => down ? MOUSEEVENTF_RIGHTDOWN : MOUSEEVENTF_RIGHTUP,
+        KeyCodes.VK_MBUTTON => down ? MOUSEEVENTF_MIDDLEDOWN : MOUSEEVENTF_MIDDLEUP,
+        KeyCodes.VK_XBUTTON1 => down ? MOUSEEVENTF_XDOWN : MOUSEEVENTF_XUP,
+        KeyCodes.VK_XBUTTON2 => down ? MOUSEEVENTF_XDOWN : MOUSEEVENTF_XUP,
+        _ => 0,
+    };
+
+    private static uint MouseDataForVk(int vk) => vk switch
+    {
+        KeyCodes.VK_XBUTTON1 => 1,
+        KeyCodes.VK_XBUTTON2 => 2,
+        _ => 0,
+    };
 
     [DllImport("user32.dll")]
     private static extern void mouse_event(uint dwFlags, int dx, int dy, uint dwData, UIntPtr dwExtraInfo);
