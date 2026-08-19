@@ -233,8 +233,9 @@ public class FpsMacro
 
 /// <summary>
 /// Wallhop macro, based on Spencer Macro Utilities wallhop defaults:
-/// 150-degree flick, jump key Space, flick-back on, 19 ms wallhop length, 0 ms bonus delay.
-/// Flick pixels are computed from the global Roblox sensitivity.
+/// 150-degree flick, jump key Space (optional), flick-back on, 19 ms wallhop
+/// length, 0 ms bonus delay. Flick pixels are computed from the global
+/// Roblox sensitivity.
 /// </summary>
 public class WallhopMacro
 {
@@ -252,14 +253,19 @@ public class WallhopMacro
     public void Trigger()
     {
         int px = ComputePixels();
+        bool jump = _settings.Wallhop.Jump;
         ThreadPool.QueueUserWorkItem(_ =>
         {
-            InputSender.MoveMouse(px, 0);        // initial flick
-            InputSender.KeyDown(KeyCodes.VK_SPACE);  // hold jump
-            Thread.Sleep(19);                    // wallhop length (fixed default)
-            InputSender.MoveMouse(-px, 0);       // flick back
-            Thread.Sleep(81);                    // 100 ms total jump hold
-            InputSender.KeyUp(KeyCodes.VK_SPACE);
+            InputSender.MoveMouse(px, 0);                    // initial flick
+            if (jump)
+                InputSender.SendScancode(InputSender.SC_SPACE);  // hold jump (scan code, like Spencer)
+            Thread.Sleep(19);                                // wallhop length (fixed default)
+            InputSender.MoveMouse(-px, 0);                   // flick back
+            if (jump)
+            {
+                Thread.Sleep(81);                            // 100 ms total jump hold
+                InputSender.SendScancode(InputSender.SC_SPACE, up: true);
+            }
         });
     }
 }

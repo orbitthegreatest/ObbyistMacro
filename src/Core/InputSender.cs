@@ -19,6 +19,9 @@ public static class InputSender
     public const byte SC_DOWN = 0x50;
     public const byte SC_F11 = 0x57;
 
+    // Scan code for Space, used by the wallhop macro's jump (like Spencer Macro Utilities)
+    public const byte SC_SPACE = 0x39;
+
     private const uint KEYEVENTF_EXTENDEDKEY = 0x0001;
     private const uint KEYEVENTF_KEYUP = 0x0002;
     private const uint KEYEVENTF_SCANCODE = 0x0008;

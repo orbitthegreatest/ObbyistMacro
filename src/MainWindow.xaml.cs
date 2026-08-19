@@ -291,6 +291,8 @@ public partial class MainWindow : Window
         FpsEnablePageToggle.Unchecked += (s, e) => SetFpsEnabled(false);
         WallhopEnablePageToggle.Checked += (s, e) => SetWallhopEnabled(true);
         WallhopEnablePageToggle.Unchecked += (s, e) => SetWallhopEnabled(false);
+        WallhopJumpToggle.Checked += (s, e) => SetWallhopJump(true);
+        WallhopJumpToggle.Unchecked += (s, e) => SetWallhopJump(false);
         FreezeEnablePageToggle.Checked += (s, e) => SetFreezeEnabled(true);
         FreezeEnablePageToggle.Unchecked += (s, e) => SetFreezeEnabled(false);
     }
@@ -327,6 +329,12 @@ public partial class MainWindow : Window
         _settings.Wallhop.Enabled = on;
         Save();
         RefreshMacroStates();
+    }
+
+    private void SetWallhopJump(bool on)
+    {
+        _settings.Wallhop.Jump = on;
+        Save();
     }
 
     private void SetFreezeEnabled(bool on)
@@ -464,6 +472,7 @@ public partial class MainWindow : Window
 
         FpsEnablePageToggle.IsChecked = _settings.Fps.Enabled;
         WallhopEnablePageToggle.IsChecked = _settings.Wallhop.Enabled;
+        WallhopJumpToggle.IsChecked = _settings.Wallhop.Jump;
         FreezeEnablePageToggle.IsChecked = _settings.Freeze.Enabled;
 
         RefreshFpsCounts();

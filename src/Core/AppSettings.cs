@@ -27,6 +27,7 @@ public class AppSettings
     {
         public bool Enabled { get; set; }
         public string Key { get; set; }
+        public bool Jump { get; set; } = true;
     }
 
     public class FreezeSettings
