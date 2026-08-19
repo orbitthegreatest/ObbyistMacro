@@ -1,0 +1,62 @@
+name: Build
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Publish app
+        shell: pwsh
+        run: |
+          dotnet publish src\ObbyistMacro.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o src\publish
+
+      - name: Install Inno Setup
+        shell: pwsh
+        run: |
+          choco install innosetup --no-progress -y
+
+      - name: Compile installer
+        shell: pwsh
+        run: |
+          $iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) { throw "ISCC.exe not found at $iscc" }
+          & $iscc installer\ObbyistMacro.iss
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ObbyistMacro
+          path: |
+            src/publish/ObbyistMacro.exe
+            installer/output/ObbyistMacro-Setup.exe
+          if-no-files-found: error
+
+      - name: Publish release
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = $env:GITHUB_REF_NAME
+          gh release create $tag installer/output/ObbyistMacro-Setup.exe `
+            --title $tag `
+            --notes "ObbyistMacro $tag — built automatically by GitHub Actions." 2>$null
+          if ($LASTEXITCODE -ne 0) {
+            gh release upload $tag installer/output/ObbyistMacro-Setup.exe --clobber
+          }

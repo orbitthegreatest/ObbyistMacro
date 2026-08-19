@@ -2,7 +2,7 @@
 ; Compile: "C:\Users\tutot\AppData\Local\Temp\opencode\innosetup\ISCC.exe" ObbyistMacro.iss
 
 #define MyAppName "ObbyistMacro"
-#define MyAppVersion "1.0.0"
+#define MyAppVersion "2.0.0"
 #define MyAppPublisher "ObbyistMacro"
 #define MyAppExeName "ObbyistMacro.exe"
 
